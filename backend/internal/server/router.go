@@ -13,6 +13,7 @@ import (
 
 	"github.com/Boyeep/nextjs-go-monorepo-kit/backend/internal/config"
 	httpHandler "github.com/Boyeep/nextjs-go-monorepo-kit/backend/internal/handler/http"
+	"github.com/Boyeep/nextjs-go-monorepo-kit/backend/internal/realtime"
 	"github.com/Boyeep/nextjs-go-monorepo-kit/backend/internal/repository"
 	"github.com/Boyeep/nextjs-go-monorepo-kit/backend/internal/service"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -20,6 +21,7 @@ import (
 
 func NewRouter(cfg config.Config, db *pgxpool.Pool) http.Handler {
 	mux := http.NewServeMux()
+	realtimeHandler := realtime.Handler{Hub: realtime.NewHub()}
 
 	userRepository := repository.NewUserRepository(db)
 
@@ -32,6 +34,8 @@ func NewRouter(cfg config.Config, db *pgxpool.Pool) http.Handler {
 	analyticsHandler := httpHandler.NewAnalyticsHandler(analyticsService)
 
 	mux.HandleFunc("GET /health", healthHandler.Get)
+	mux.HandleFunc("GET /api/v1/realtime/rooms/{room}", realtimeHandler.Room)
+	mux.HandleFunc("GET /api/v1/realtime/rooms/{room}/connect", realtimeHandler.Connect)
 	mux.HandleFunc("POST /api/v1/auth/register", authHandler.Register)
 	mux.HandleFunc("POST /api/v1/auth/login", authHandler.Login)
 	mux.HandleFunc("POST /api/v1/auth/verify-email", authHandler.VerifyEmail)
